@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const db = require('./database');
 
 const app = express();
@@ -7,6 +8,10 @@ const PORT = 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// Serve frontend static files
+const frontendDist = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendDist));
 
 // GET all products
 app.get('/api/products', (req, res) => {
@@ -55,6 +60,11 @@ app.patch('/api/products/:id/quantity', (req, res) => {
   if (result.changes === 0) return res.status(404).json({ error: 'Product not found' });
   const product = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
   res.json(product);
+});
+
+// SPA fallback
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
 app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
